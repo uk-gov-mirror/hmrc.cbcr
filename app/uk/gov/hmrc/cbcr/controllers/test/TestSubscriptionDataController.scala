@@ -26,7 +26,6 @@ import uk.gov.hmrc.cbcr.models._
 import uk.gov.hmrc.cbcr.repositories.{DocRefIdRepository, MessageRefIdRepository, ReportingEntityDataRepo, SubscriptionDataRepository}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.config.ServicesConfig
-
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -36,28 +35,7 @@ class TestSubscriptionDataController @Inject()(subRepo: SubscriptionDataReposito
                                                reportingEntityDataRepo: ReportingEntityDataRepo
                                               )(implicit ec: ExecutionContext) extends BaseController with ServicesConfig with GenericAppConfig {
 
-  def insertData() = Action.async[JsValue](parse.json) {
-    implicit request =>
-      withJsonBody[SubscriptionDetails] {
-        subRepo.save(_) map {
-          _.ok match {
-            case true => Ok("data submitted successfully")
-            case false =>
-              InternalServerError("error submitting data")
-          }
-        }
-      }
-  }
 
-  def deleteSubscription(utrs: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      val utr = Utr(utrs)
-      subRepo.clear(utr).map {
-        case w if w.ok => Ok
-        case _ => InternalServerError
-      }
-    }
-  }
 
   def deleteSingleDocRefId(docRefIds: String): Action[AnyContent] = Action.async {
     implicit request => {
@@ -149,12 +127,13 @@ class TestSubscriptionDataController @Inject()(subRepo: SubscriptionDataReposito
       }
     }
   }
-  def updateReportingEntityAdditionalInfoDRI(docRefId:String) = Action.async {
+
+  def updateReportingEntityAdditionalInfoDRI(docRefId: String) = Action.async {
     implicit request => {
       val dri = DocRefId(docRefId)
 
       reportingEntityDataRepo.updateAdditionalInfoDRI(dri).map {
-        case n if n>0 => Ok
+        case n if n > 0 => Ok
         case _ => NotModified
       }
     }
